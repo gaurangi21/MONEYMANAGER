@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+
+/* Reset & Base Font */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Red + Black Gradient Background */
+body, html {
+    height: 100%;
+    background: linear-gradient(135deg, #000000, #8b0000);
+    overflow-x: hidden;
+    color: #f0f0f0;
+}
+
+/* Background Animation */
+.background-animation {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: url('https://cdn-icons-png.flaticon.com/512/825/825481.png');
+  background-repeat: repeat;
+  background-size: 80px;
+  opacity: 0.07;
+  animation: moveMoney 60s linear infinite;
+  z-index: 1;
+}
+
+@keyframes moveMoney {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 1000px 1000px;
+  }
+}
+
+/* Common Container */
+.container, .dashboard-container, .login-container {
+  position: relative;
+  z-index: 2;
+  background: rgba(20, 20, 20, 0.95);
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  padding: 40px;
+  margin: 50px auto;
+  max-width: 600px;
+  text-align: center;
+}
+
+/* Heading Styles */
+h1, h3 {
+  color: #ff4b5c;
+  margin-bottom: 20px;
+}
+
+/* Inputs, Select, and Buttons */
+input, select, button {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background-color: #333;
+  color: white;
+}
+
+input::placeholder {
+  color: #aaa;
+}
+
+button {
+  background-color: #ff4b5c;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background-color: #e03c4a;
+}
+
+/* Dashboard */
+.dashboard-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 30px;
+  width: 250px;
+  color: #fff;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* Add Expense Button and Back Button */
+.add-expense-btn {
+  display: inline-block;
+  margin-top: 40px;
+  padding: 15px 30px;
+  font-size: 16px;
+  color: white;
+  background-color: #ff4b5c;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.3s ease;
+}
+
+.add-expense-btn:hover {
+  background-color: #e03c4a;
+}
+
+/* Table Styles */
+table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+th {
+  background-color: #444;
+  color: #fff;
+}
+
+td {
+  background-color: #333;
+  color: #fff;
+}
+
+.actions button {
+  margin-right: 10px;
+}
+
+/* Filter group margin */
+.filter-group {
+  margin-top: 20px;
+}

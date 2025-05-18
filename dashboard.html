@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | Money Manager</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    .dashboard-container {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      text-align: center;
+    }
+
+    .dashboard-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .card {
+      background-color: #222;
+      padding: 20px;
+      border-radius: 10px;
+      width: 200px;
+    }
+
+    .edit-btn, .add-expense-btn {
+      background-color: #ff3c3c;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-top: 10px;
+      cursor: pointer;
+      display: inline-block;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .warning-message {
+      background-color: #ffcccc;
+      color: #a94442;
+      padding: 10px;
+      margin-top: 15px;
+      border: 1px solid #a94442;
+      border-radius: 5px;
+      text-align: center;
+      font-weight: bold;
+      display: none;
+      animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+
+    .progress-container {
+      margin-top: 20px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      background-color: #ddd;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      height: 25px;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background-color: #4caf50;
+      text-align: center;
+      line-height: 25px;
+      color: white;
+      border-radius: 20px;
+      transition: width 1s ease;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard-container">
+    <h1>Welcome to Your Dashboard 💼</h1>
+
+    <!-- Avatar + Username -->
+    <div id="userProfile" style="display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:20px;">
+      <img id="dashboardAvatar" src="" alt="User Avatar" style="width:50px; height:50px; border-radius:50%; border:2px solid #ff3c3c;" />
+      <span id="dashboardUsername" style="color:#ff3c3c; font-weight:bold; font-size:18px;"></span>
+    </div>
+
+    <p class="tagline">Manage your expenses and budget efficiently!</p>
+
+    <div class="dashboard-cards">
+      <div class="card">
+        <h3>Total Balance</h3>
+        <p id="totalBalance">₹0</p>
+        <h3>User Profile</h3>
+        <button onclick="window.location.href='profile.html'" class="edit-btn">👤 Go to Profile</button>
+        <h3>Rewards</h3>
+        <button onclick="window.location.href='reward.html'" class="edit-btn">🏆 Rewards</button>
+        <h3>Virtual Store</h3>
+        <button onclick="window.location.href='store.html'" class="edit-btn">🛒 Store</button>
+        <button onclick="editBalance()" class="edit-btn">✏️ Edit Balance</button>
+        <h3>Currency Calculator</h3>
+        <button onclick="window.location.href='currency_cal.html'" class="edit-btn">💱 Open Calculator</button>
+      </div>
+
+      <div class="card">
+        <h3>Expenses</h3>
+        <p id="expenses">₹0</p>
+      </div>
+
+      <div class="card">
+        <h3>Remaining Budget</h3>
+        <p id="remainingBudget">₹0</p>
+      </div>
+    </div>
+
+    <!-- Progress Bars Section -->
+    <div class="progress-container">
+      <h3>Budget Spent</h3>
+      <div class="progress-bar">
+        <div id="spentProgress" class="progress">0%</div>
+      </div>
+    </div>
+
+    <!-- Warning Message -->
+    <div id="warningMessage" class="warning-message">
+      ⚠️ You went over the budget!
+    </div>
+
+    <!-- Buttons -->
+    <a href="newaddexpense.html" class="add-expense-btn">➕ Add Expense</a>
+    <a href="summary.html" class="add-expense-btn" style="margin-top: 10px;">📈 View Summary</a>
+    <a href="profile.html" class="add-expense-btn" style="background-color: #ff4500; margin-left: 10px;">👤 Profile</a>
+  </div>
+
+  <script>
+    // Avatars list must be same as profile.html and store.html
+    const avatars = {
+      avatar1: 'https://api.dicebear.com/7.x/adventurer/svg?seed=RedRacer',
+      avatar2: 'https://api.dicebear.com/7.x/adventurer/svg?seed=BlueBreeze',
+      avatar3: 'https://api.dicebear.com/7.x/adventurer/svg?seed=GreenGuardian',
+      avatar4: 'https://api.dicebear.com/7.x/adventurer/svg?seed=YellowYeti',
+      avatar5: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PurplePhantom',
+      avatar6: 'https://api.dicebear.com/7.x/adventurer/svg?seed=OrangeOracle',
+      avatar7: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PinkPixie',
+      avatar8: 'https://api.dicebear.com/7.x/adventurer/svg?seed=SilverSamurai',
+      avatar9: 'https://api.dicebear.com/7.x/adventurer/svg?seed=GoldenGladiator',
+      avatar10: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CyanCyclone',
+    };
+
+    const dashboardAvatar = document.getElementById("dashboardAvatar");
+    const dashboardUsername = document.getElementById("dashboardUsername");
+
+    function loadDashboard() {
+      const savedUsername = localStorage.getItem('username') || 'User';
+
+      // Get avatar id from localStorage (default to avatar1)
+      const selectedAvatarId = localStorage.getItem('selectedAvatar') || 'avatar1';
+      const avatarUrl = avatars[selectedAvatarId] || avatars['avatar1'];
+
+      dashboardUsername.textContent = savedUsername;
+      dashboardAvatar.src = avatarUrl;
+
+      // Update balance and expenses
+      const totalBalance = parseFloat(localStorage.getItem('totalBalance')) || 0;
+      const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+
+      const month = new Date().toISOString().slice(0, 7);
+      let monthlyExpenses = 0;
+      expenses.forEach(exp => {
+        if (exp.date && exp.date.startsWith(month)) {
+          monthlyExpenses += parseFloat(exp.amount) || 0;
+        }
+      });
+
+      document.getElementById('totalBalance').innerText = `₹${totalBalance.toFixed(2)}`;
+      document.getElementById('expenses').innerText = `₹${monthlyExpenses.toFixed(2)}`;
+
+      const remaining = totalBalance - monthlyExpenses;
+      document.getElementById('remainingBudget').innerText = `₹${remaining.toFixed(2)}`;
+
+      const warningMessage = document.getElementById('warningMessage');
+      warningMessage.style.display = remaining < 0 ? 'block' : 'none';
+
+      const spentPercent = totalBalance > 0 ? (monthlyExpenses / totalBalance) * 100 : 0;
+      const progress = document.getElementById('spentProgress');
+      progress.style.width = Math.min(spentPercent, 100) + '%';
+      progress.textContent = Math.min(spentPercent, 100).toFixed(1) + '%';
+      progress.style.backgroundColor = spentPercent > 100 ? '#e74c3c' : '#4caf50';
+    }
+
+    function editBalance() {
+      let newBalance = prompt("Enter your total budget amount:", localStorage.getItem('totalBalance') || '');
+      if (newBalance !== null) {
+        newBalance = parseFloat(newBalance);
+        if (!isNaN(newBalance) && newBalance >= 0) {
+          localStorage.setItem('totalBalance', newBalance);
+          loadDashboard();
+        } else {
+          alert("Please enter a valid positive number.");
+        }
+      }
+    }
+
+    window.onload = () => {
+      loadDashboard();
+    };
+  </script>
+</body>
+</html>

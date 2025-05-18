@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Expense | Money Manager</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Background Animation -->
+  <div class="background-animation"></div>
+
+  <div class="container">
+    <h1>Add Expense 💸</h1>
+
+    <div class="form-group">
+      <input type="text" id="description" placeholder="Description" required />
+      <input type="number" id="amount" placeholder="Amount (₹)" required min="0.01" step="0.01" />
+
+      <select id="category" required>
+        <option value="" disabled selected>Select Category</option>
+        <option value="Food">Food</option>
+        <option value="Transport">Transport</option>
+        <option value="Entertainment">Entertainment</option>
+        <option value="Shopping">Shopping</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <input type="date" id="date" required />
+
+      <button id="addExpenseBtn">Add Expense</button>
+    </div>
+
+    <div class="filter-group">
+      <label>Start Date:</label>
+      <input type="date" id="startDate" />
+      <label>End Date:</label>
+      <input type="date" id="endDate" />
+      <button onclick="filterExpenses()">Filter</button>
+      <button onclick="clearFilter()">Clear Filter</button>
+    </div>
+
+    <h3>Today's Total: ₹<span id="todayTotal">0.00</span></h3>
+    <h3>Monthly Total: ₹<span id="monthTotal">0.00</span></h3>
+
+    <canvas id="chart" width="400" height="200"></canvas>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Amount (₹)</th>
+          <th>Category</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="expenseList"></tbody>
+    </table>
+
+    <!-- Back Button -->
+    <a href="dashboard.html" class="add-expense-btn" style="margin-top: 20px; display: inline-block;">← Back to Dashboard</a>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const descriptionInput = document.getElementById('description');
+      const amountInput = document.getElementById('amount');
+      const categorySelect = document.getElementById('category');
+      const dateInput = document.getElementById('date');
+      const addExpenseBtn = document.getElementById('addExpenseBtn');
+      const expenseList = document.getElementById('expenseList');
+      const todayTotalSpan = document.getElementById('todayTotal');
+      const monthTotalSpan = document.getElementById('monthTotal');
+      const ctx = document.getElementById('chart').getContext('2d');
+
+      let chart; // For Chart.js instance
+
+      // Set default date input to today
+      const todayStr = new Date().toISOString().slice(0, 10);
+      dateInput.value = todayStr;
+
+      // Load expenses from localStorage or empty array
+      function getExpenses() {
+        return JSON.parse(localStorage.getItem('expenses') || '[]');
+      }
+
+      // Save expenses to localStorage
+      function saveExpenses(expenses) {
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+      }
+
+      // Render expenses table
+      function renderExpenses(expenses) {
+        expenseList.innerHTML = '';
+
+        expenses.forEach((exp, index) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${exp.description}</td>
+            <td>₹${exp.amount.toFixed(2)}</td>
+            <td>${exp.category}</td>
+            <td>${exp.date}</td>
+            <td><button onclick="deleteExpense(${index})" style="color:red;">Delete</button></td>
+          `;
+          expenseList.appendChild(tr);
+        });
+      }
+
+      // Calculate totals for today and this month
+      function calculateTotals(expenses) {
+        const today = new Date().toISOString().slice(0, 10);
+        const now = new Date();
+        const thisMonth = now.toISOString().slice(0, 7); // e.g. "2025-05"
+
+        let todayTotal = 0;
+        let monthTotal = 0;
+
+        expenses.forEach(exp => {
+          if (exp.date === today) {
+            todayTotal += exp.amount;
+          }
+          if (exp.date.startsWith(thisMonth)) {
+            monthTotal += exp.amount;
+          }
+        });
+
+        todayTotalSpan.textContent = todayTotal.toFixed(2);
+        monthTotalSpan.textContent = monthTotal.toFixed(2);
+      }
+
+      // Render Pie Chart of expenses by category
+      function renderChart(expenses) {
+        const categoryTotals = {};
+        expenses.forEach(exp => {
+          categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+        });
+
+        const categories = Object.keys(categoryTotals);
+        const amounts = categories.map(cat => categoryTotals[cat]);
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: categories,
+            datasets: [{
+              data: amounts,
+              backgroundColor: [
+                '#FF6384',
+                '#36A2EB',
+                '#FFCE56',
+                '#8BC34A',
+                '#FF9800',
+                '#9C27B0'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+      }
+
+      // Refresh all UI parts
+      function refreshUI() {
+        const expenses = getExpenses();
+        renderExpenses(expenses);
+        calculateTotals(expenses);
+        renderChart(expenses);
+      }
+
+      // Add expense event handler
+      addExpenseBtn.addEventListener('click', () => {
+        const description = descriptionInput.value.trim();
+        const amount = parseFloat(amountInput.value);
+        const category = categorySelect.value;
+        const date = dateInput.value;
+
+        if (!description) {
+          alert("Please enter a description.");
+          return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+          alert("Please enter a valid amount greater than zero.");
+          return;
+        }
+        if (!category) {
+          alert("Please select a category.");
+          return;
+        }
+        if (!date) {
+          alert("Please select a date.");
+          return;
+        }
+
+        const expenses = getExpenses();
+        expenses.push({ description, amount, category, date });
+        saveExpenses(expenses);
+
+        descriptionInput.value = '';
+        amountInput.value = '';
+        categorySelect.value = '';
+        dateInput.value = todayStr;
+
+        refreshUI();
+      });
+
+      // Delete expense by index (global to allow inline onclick)
+      window.deleteExpense = function(index) {
+        const expenses = getExpenses();
+        expenses.splice(index, 1);
+        saveExpenses(expenses);
+        refreshUI();
+      };
+
+      // Filter expenses
+      window.filterExpenses = function() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        let expenses = getExpenses();
+
+        if (startDate) {
+          expenses = expenses.filter(exp => exp.date >= startDate);
+        }
+        if (endDate) {
+          expenses = expenses.filter(exp => exp.date <= endDate);
+        }
+
+        renderExpenses(expenses);
+        calculateTotals(expenses);
+        renderChart(expenses);
+      };
+
+      // Clear filter
+      window.clearFilter = function() {
+        document.getElementById('startDate').value = '';
+        document.getElementById('endDate').value = '';
+        refreshUI();
+      };
+
+      // Initial UI setup
+      refreshUI();
+    });
+  </script>
+</body>
+</html>

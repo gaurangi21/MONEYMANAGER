@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rewards | Money Manager</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+  body {
+    background: #121212;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+  }
+  #pointsDisplay {
+    font-size: 2rem;
+    margin: 30px 0;
+    text-align: center;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    background: #4caf50;
+    border: none;
+    border-radius: 5px;
+    color: white;
+  }
+  a.back-link {
+    display: block;
+    margin-top: 40px;
+    text-align: center;
+    color: #4caf50;
+    text-decoration: none;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<h1>🏆 Rewards</h1>
+<div id="pointsDisplay">Your Points: 0</div>
+<button id="claimPointsBtn">Claim Monthly Saving Reward</button>
+
+<a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+
+<script>
+  // Load points or set zero
+  let points = parseInt(localStorage.getItem('rewardPoints')) || 0;
+  const pointsDisplay = document.getElementById('pointsDisplay');
+  const claimBtn = document.getElementById('claimPointsBtn');
+
+  // Update points display
+  function updateDisplay() {
+    pointsDisplay.textContent = `Your Points: ${points}`;
+  }
+
+  // Check if user saved money this month (under budget)
+  function canClaimReward() {
+    const monthlyBudget = parseFloat(localStorage.getItem('monthlyBudget')) || 0;
+    const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+    const month = new Date().toISOString().slice(0, 7);
+    const monthlyExpenses = expenses
+      .filter(exp => exp.date && exp.date.startsWith(month))
+      .reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+    return monthlyExpenses <= monthlyBudget && monthlyBudget > 0;
+  }
+
+  // Check if reward already claimed for this month
+  function rewardAlreadyClaimed() {
+    const lastClaim = localStorage.getItem('lastRewardClaim');
+    const currentMonth = new Date().toISOString().slice(0,7);
+    return lastClaim === currentMonth;
+  }
+
+  claimBtn.addEventListener('click', () => {
+    if (!canClaimReward()) {
+      alert("You need to save money this month to claim rewards!");
+      return;
+    }
+    if (rewardAlreadyClaimed()) {
+      alert("You already claimed your reward for this month!");
+      return;
+    }
+    points += 100; // reward points
+    localStorage.setItem('rewardPoints', points);
+    localStorage.setItem('lastRewardClaim', new Date().toISOString().slice(0,7));
+    updateDisplay();
+    alert("🎉 Congrats! You earned 100 reward points!");
+  });
+
+  updateDisplay();
+</script>
+
+</body>
+</html>

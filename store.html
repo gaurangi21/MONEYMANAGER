@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>User Profile | Money Manager</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #111;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+  }
+  h1 {
+    color: #ff4b5c;
+  }
+  input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    width: 250px;
+    border-radius: 8px;
+    border: none;
+    margin: 15px 0;
+    text-align: center;
+  }
+  button.save-btn {
+    padding: 10px 25px;
+    font-size: 18px;
+    background-color: #ff3c3c;
+    border: none;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  button.save-btn:hover {
+    background-color: #e03232;
+  }
+  .avatar-section img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid #ff4b5c;
+    margin: 10px 0;
+    object-fit: cover;
+  }
+  .avatar-selection {
+    margin-top: 20px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .avatar-selection h3 {
+    margin-bottom: 15px;
+  }
+  .avatar-selection .avatar-card {
+    display: inline-block;
+    margin: 8px;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    width: 80px;
+    height: 80px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+    position: relative;
+  }
+  .avatar-selection .avatar-card.locked {
+    filter: grayscale(90%);
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .avatar-selection .avatar-card.selected {
+    border-color: #ff3c3c;
+  }
+  .avatar-selection .avatar-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .back-btn {
+    margin-top: 30px;
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #ff3c3c;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>👤 User Profile</h1>
+
+<input type="text" id="usernameInput" placeholder="Enter your name" maxlength="30" />
+
+<div class="avatar-section">
+  <h2>Your Current Avatar</h2>
+  <img id="profileAvatar" src="" alt="User Avatar" />
+</div>
+
+<div class="avatar-selection">
+  <h3>Select an Avatar</h3>
+  <!-- Avatars inserted here dynamically -->
+</div>
+
+<button class="save-btn" onclick="saveProfile()">Save Profile</button>
+
+<br />
+<a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+
+<script>
+  // Avatars data (same as store)
+  const avatars = [
+    { id: 'avatar1', name: 'Red Racer', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=RedRacer', price: 250 },
+    { id: 'avatar2', name: 'Blue Breeze', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=BlueBreeze', price: 300 },
+    { id: 'avatar3', name: 'Green Guardian', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=GreenGuardian', price: 200 },
+    { id: 'avatar4', name: 'Yellow Yeti', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=YellowYeti', price: 350 },
+    { id: 'avatar5', name: 'Purple Phantom', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PurplePhantom', price: 400 },
+    { id: 'avatar6', name: 'Orange Oracle', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=OrangeOracle', price: 220 },
+    { id: 'avatar7', name: 'Pink Pixie', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PinkPixie', price: 180 },
+    { id: 'avatar8', name: 'Silver Samurai', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=SilverSamurai', price: 450 },
+    { id: 'avatar9', name: 'Golden Gladiator', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=GoldenGladiator', price: 500 },
+    { id: 'avatar10', name: 'Cyan Cyclone', img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=CyanCyclone', price: 275 },
+  ];
+
+  // Get unlocked avatars & user points from localStorage
+  const unlockedAvatars = JSON.parse(localStorage.getItem('unlockedAvatars')) || ['avatar1'];
+  const userPoints = parseInt(localStorage.getItem('userPoints')) || 0;
+
+  // Load saved username and selected avatar
+  const savedUsername = localStorage.getItem('username') || '';
+  let selectedAvatarId = localStorage.getItem('selectedAvatar') || 'avatar1';
+
+  const usernameInput = document.getElementById('usernameInput');
+  const profileAvatar = document.getElementById('profileAvatar');
+  const avatarSelectionDiv = document.querySelector('.avatar-selection');
+
+  usernameInput.value = savedUsername;
+
+  // Display current avatar image
+  function updateProfileAvatar() {
+    const avatar = avatars.find(a => a.id === selectedAvatarId);
+    profileAvatar.src = avatar ? avatar.img : '';
+    profileAvatar.alt = avatar ? avatar.name : 'No avatar selected';
+  }
+  updateProfileAvatar();
+
+  // Render avatar selection options
+  function renderAvatarOptions() {
+    avatarSelectionDiv.innerHTML = '<h3>Select an Avatar</h3>';
+
+    avatars.forEach(avatar => {
+      const isUnlocked = unlockedAvatars.includes(avatar.id);
+
+      const avatarCard = document.createElement('div');
+      avatarCard.classList.add('avatar-card');
+      if (!isUnlocked) avatarCard.classList.add('locked');
+      if (avatar.id === selectedAvatarId) avatarCard.classList.add('selected');
+
+      avatarCard.title = isUnlocked ? avatar.name : `Locked - costs ${avatar.price} pts`;
+
+      const img = document.createElement('img');
+      img.src = avatar.img;
+      img.alt = avatar.name;
+
+      avatarCard.appendChild(img);
+
+      // Click to select unlocked avatars only
+      if (isUnlocked) {
+        avatarCard.addEventListener('click', () => {
+          selectedAvatarId = avatar.id;
+          updateProfileAvatar();
+          renderAvatarOptions();
+        });
+      }
+
+      avatarSelectionDiv.appendChild(avatarCard);
+    });
+  }
+  renderAvatarOptions();
+
+  // Save profile data (username + selected avatar)
+  function saveProfile() {
+    const username = usernameInput.value.trim();
+    if (!username) {
+      alert('Please enter your name.');
+      return;
+    }
+    localStorage.setItem('username', username);
+    localStorage.setItem('selectedAvatar', selectedAvatarId);
+
+    alert('Profile saved successfully!');
+  }
+</script>
+
+</body>
+</html>

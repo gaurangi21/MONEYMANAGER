@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Profile | Money Manager</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    .reward-points {
+      font-size: 18px;
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: #ff3c3c;
+    }
+    .go-store-btn {
+      display: inline-block;
+      background-color: #ff3c3c;
+      color: white;
+      padding: 10px 25px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-bottom: 30px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .go-store-btn:hover {
+      background-color: #e03232;
+    }
+    .avatar-section img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      margin: 10px 0;
+    }
+    .avatar-selection {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .avatar-selection img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: 0.3s;
+      position: relative;
+      filter: grayscale(100%);
+      opacity: 0.5;
+    }
+    .avatar-selection img.unlocked {
+      filter: none;
+      opacity: 1;
+    }
+    .avatar-selection img.selected {
+      border-color: #ff3c3c;
+      box-shadow: 0 0 10px #ff3c3c;
+    }
+    /* Lock icon overlay */
+    .avatar-selection img.locked::after {
+      content: "🔒";
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-size: 20px;
+      color: #ff3c3c;
+      pointer-events: none;
+    }
+    .back-btn {
+      margin-top: 30px;
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #ff3c3c;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 10px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 250px;
+      border-radius: 8px;
+      border: none;
+      margin: 15px 0;
+      text-align: center;
+    }
+    button.save-btn {
+      padding: 10px 25px;
+      font-size: 18px;
+      background-color: #ff3c3c;
+      border: none;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button.save-btn:hover {
+      background-color: #e03232;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>👤 User Profile</h1>
+
+  <div class="reward-points" id="pointsDisplay">
+    Reward Points: 0
+  </div>
+
+  <a href="store.html" class="go-store-btn">🛒 Go to Virtual Store</a>
+
+  <input type="text" id="usernameInput" placeholder="Enter your name" maxlength="30" />
+
+  <div class="avatar-section">
+    <h2>Your Avatar</h2>
+    <img id="profileAvatar" src="" alt="User Avatar" />
+  </div>
+
+  <div>
+    <h3>Select an Avatar (Unlocked Only)</h3>
+    <div class="avatar-selection" id="avatarSelection">
+      <!-- avatars inserted by JS -->
+    </div>
+  </div>
+
+  <button class="save-btn" onclick="saveProfile()">Save Profile</button>
+
+  <br />
+  <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+
+  <script>
+    const avatarImg = document.getElementById("profileAvatar");
+    const usernameInput = document.getElementById("usernameInput");
+    const avatarSelection = document.getElementById("avatarSelection");
+    const pointsDisplay = document.getElementById("pointsDisplay");
+
+    // All possible avatars for selection, with display name (optional)
+    const avatars = [
+      { url: "https://api.dicebear.com/7.x/adventurer/png?seed=Alex", name: "Alex" },
+      { url: "https://api.dicebear.com/7.x/adventurer/png?seed=Luna", name: "Luna" },
+      { url: "https://api.dicebear.com/7.x/adventurer/png?seed=Max", name: "Max" },
+      { url: "https://api.dicebear.com/7.x/adventurer/png?seed=Zoe", name: "Zoe" },
+      { url: "https://api.dicebear.com/7.x/adventurer/png?seed=Kai", name: "Kai" },
+      { url: "https://api.dicebear.com/7.x/adventurer/svg?seed=Blaze", name: "Blaze (Store Avatar)" }
+    ];
+
+    // Load saved data
+    const savedAvatar = localStorage.getItem("avatar") || avatars[0].url;
+    const savedUsername = localStorage.getItem("username") || "";
+
+    // Load unlocked avatars from localStorage, or default unlocked avatars (you can customize)
+    const unlockedAvatars = JSON.parse(localStorage.getItem("unlockedAvatars")) || [avatars[0].url];
+
+    // Load reward points from localStorage
+    let rewardPoints = parseInt(localStorage.getItem("rewardPoints")) || 0;
+
+    // Set initial avatar, username and points display
+    avatarImg.src = savedAvatar;
+    usernameInput.value = savedUsername;
+    pointsDisplay.textContent = `Reward Points: ${rewardPoints}`;
+
+    function clearSelection() {
+      document.querySelectorAll(".avatar-selection img").forEach(img => {
+        img.classList.remove("selected");
+      });
+    }
+
+    function buildAvatarSelection() {
+      avatarSelection.innerHTML = ""; // clear
+
+      avatars.forEach(av => {
+        const img = document.createElement("img");
+        img.src = av.url;
+        img.alt = av.name;
+        img.title = av.name;
+
+        if (unlockedAvatars.includes(av.url)) {
+          img.classList.add("unlocked");
+          img.onclick = () => {
+            clearSelection();
+            img.classList.add("selected");
+            avatarImg.src = av.url;
+          };
+        } else {
+          img.classList.add("locked");
+          img.onclick = () => {
+            alert("This avatar is locked! Buy it in the Store to unlock.");
+          };
+        }
+
+        if (av.url === savedAvatar) {
+          img.classList.add("selected");
+        }
+
+        avatarSelection.appendChild(img);
+      });
+    }
+
+    buildAvatarSelection();
+
+    function saveProfile() {
+      const username = usernameInput.value.trim();
+      if (!username) {
+        alert("Please enter your name.");
+        return;
+      }
+      const avatar = avatarImg.src;
+
+      if (!unlockedAvatars.includes(avatar)) {
+        alert("Please select an unlocked avatar.");
+        return;
+      }
+
+      localStorage.setItem("username", username);
+      localStorage.setItem("avatar", avatar);
+
+      alert("Profile saved successfully!");
+    }
+  </script>
+</body>
+</html>
